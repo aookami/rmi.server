@@ -10,6 +10,7 @@ public class ServerMain {
 	int thegreatidindex = 0;
 
 	public static void main(String[] args) {
+		//Creating a new ServerObject
 		Server server = null;
 		try {
 			server = new ServerImpl();
@@ -18,21 +19,28 @@ public class ServerMain {
 			return;
 		}
 
+		
 		try {
+			//Creating the name registry and binding the server object
 			Registry refNames = LocateRegistry.createRegistry(5005);
 
 			refNames.rebind("server", server);
-
+			
+			//Adding a few items for debug purpose
+			
 			server.addFlight(1, 50, "sp", "cwb", 150000, 50);
 			server.addHotel(15, "aaa", "sp", 10, 3, 50);
+			
 			while (true) {
-
+				//This loop gets data from console input and executes according methods.
+				
 				Scanner scanner = new Scanner(System.in);
 				String input = scanner.nextLine();
 				System.out.println("Waiting for input");
 				if (input.contains("help")) {
 					System.out.println("addflight-id-seats-to-from-fftimestamp-price");
 					System.out.println("addhotel-id-name-where-rooms-roomcap-price");
+					System.out.println("addpackage-pid-fid-hid-seats-price");
 					System.out.println("lookupallhotels");
 					System.out.println("lookupallflights");
 					System.out.println("lookupallpackages");
@@ -80,10 +88,6 @@ public class ServerMain {
 			System.out.println("Remote exception at creating registry:" + e.getMessage());
 		}
 
-	}
-	public int getId() {
-		thegreatidindex = thegreatidindex +1;
-		return thegreatidindex;
 	}
 
 }

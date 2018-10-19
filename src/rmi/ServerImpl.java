@@ -2,6 +2,7 @@ package rmi;
 
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -10,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServerImpl extends UnicastRemoteObject implements Server {
+	
+	//All commentaries are in the interface file*********************************
 
 	protected ServerImpl() throws RemoteException {
 		super();
@@ -206,6 +209,7 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 			}
 			if (flightMatches && hotelMatches) {
 				x.client.notifyEvent("Package interest met!");
+				packagesInt.remove(x);
 			}
 		}
 	}
