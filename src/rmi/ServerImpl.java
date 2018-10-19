@@ -21,13 +21,17 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	List<RoomsInt> rint = new ArrayList();
+	List<PackageInt> packagesInt = new ArrayList<>();
 
-	List<FlightInt> fint = new ArrayList();
+	List<RoomsInt> rint = new ArrayList<>();
 
-	List<Flight> flights = new ArrayList();
+	List<FlightInt> fint = new ArrayList<>();
 
-	List<Hotel> hotels = new ArrayList();
+	List<Flight> flights = new ArrayList<>();
+
+	List<Hotel> hotels = new ArrayList<>();
+
+	List<Package> packages = new ArrayList<>();
 
 	@Override
 	public List<String> getFlights() throws RemoteException {
@@ -89,22 +93,27 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 
 	}
 
-	public void addHotel(int id, String name, String where, int rooms, int roomcap, int roomprice) throws RemoteException {
+	@Override
+	public void addHotel(int id, String name, String where, int rooms, int roomcap, int roomprice)
+			throws RemoteException {
 		System.out.println("Adding new hotel...");
 
 		Hotel newHotel = new Hotel(id, name, where, rooms, roomcap, roomprice);
 
 		hotels.add(newHotel);
-		
-		for(RoomsInt ri : rint) {
-			if (ri.maxprice >=  roomprice && where.equals(ri.where) && roomcap*rooms >= ri.seats) {
+
+		for (RoomsInt ri : rint) {
+			if (ri.maxprice >= roomprice && where.equals(ri.where) && roomcap * rooms >= ri.seats) {
 				System.out.println("MET INT");
 				ri.client.notifyEvent(id + " - " + where + " - " + rooms + " - " + roomprice + " - " + name
 						+ "meets an registered interest!");
 			}
 		}
+		verifyPackageInts();
+
 	}
 
+	@Override
 	public void addFlight(int id, int seats, String to, String from, long fftimestamp, int price)
 			throws RemoteException {
 		System.out.println("Adding new flight...");
@@ -118,17 +127,99 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 		}
 		Flight newFlight = new Flight(id, seats, to, from, fftimestamp, price);
 		flights.add(newFlight);
+		verifyPackageInts();
+
+	}
+
+	@Override
+	public void addPackage(int idp, int id, int seats, String to, String from, int price, long fftimestamp, int idh,
+			String name, String where, int roomcap) throws RemoteException {
+		System.out.println("Added package!");
+		Package pack = new Package(idp, id, seats, to, from, price, fftimestamp, idh, name, where, roomcap);
+		packages.add(pack);
+		verifyPackageInts();
+
+
+	}
+
+	@Override
+	public void addPackage(int idp, int idf, int idh, int seats, int price) throws RemoteException {
+		System.out.println("Added package!");
+		Flight y = null;
+		for (Flight x : flights) {
+			if (x.id == idf)
+				y = x;
+		}
+
+		Hotel z = null;
+		for (Hotel h : hotels) {
+			if (h.id == idh)
+				z = h;
+		}
+		Package packagen = new Package(idp, y, z, seats, price);
+		packages.add(packagen);
+		verifyPackageInts();
+	}
+
+	@Override
+	public void addPackageInt(String to, String from, String where, int maxprice, int seats, String client)
+			throws RemoteException {
+		Registry refSN = LocateRegistry.getRegistry(5005);
+		Client newC = null;
+		try {
+			newC = (Client) refSN.lookup(client);
+		} catch (NotBoundException e) {
+			System.out.println("ERR");
+		}
+		packagesInt.add(new PackageInt(to, from, where, maxprice, seats, newC));
+		System.out.println("New package interest added!");
+		verifyPackageInts();
+
+	}
+
+	public void verifyPackageInts() throws RemoteException {
+		for (PackageInt x : packagesInt) {
+			Boolean flightMatches = false;
+			Boolean hotelMatches = false;
+			for (Flight f : flights) {
+				if (x.to.equals(f.to) && x.from.equals(f.to)) {
+					flightMatches = true;
+					System.out.println("MATCHED FLIGHT");
+				}
+			}
+			for (Hotel z : hotels) {
+				if (x.where.equals(z.where) && x.seats <= z.getAvailablerooms()) {
+					hotelMatches = true;
+					System.out.println("MATCHED HOTEL");
+				}
+
+			}
+			if (flightMatches && hotelMatches) {
+				x.client.notifyEvent("Package interest met!");
+			}
+		}
+	}
+
+	public List<String> getPackages() {
+		List<String> pk = new ArrayList<>();
+		for (Package x : packages) {
+			pk.add("Package-" + x.flight.id + "-" + x.flight.seats + "-" + x.flight.to + "-" + x.flight.from + "-"
+					+ x.flight.fftimestamp + "-" + x.price + "-" + x.hotel.name + "-" + x.hotel.where + "-"
+					+ x.hotel.roomcapacity);
+
+		}
+		return pk;
 	}
 
 	public void removeFlight(Flight flight) throws RemoteException {
-		System.out.println("Removing flight...");
+		System.out.println("Removing flight" + flight.id + "...");
 
 		flights.remove(flight);
 	}
-	
+
 	@Override
 	public boolean sellFlight(int id, int seats) throws RemoteException {
-		System.out.println("Selling " + seats +" seats on flight " + id + "...");
+		System.out.println("Selling " + seats + " seats on flight " + id + "...");
 
 		for (Flight x : flights) {
 			if (x.id == id) {
@@ -145,8 +236,8 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 
 	@Override
 	public boolean sellRooms(int id, int seats, long startdate, long enddate) throws RemoteException {
-		System.out.println("Selling " + seats +" rooms on hotel " + id + " start and end dates: "  + startdate 
-				+ " - " + enddate);
+		System.out.println(
+				"Selling " + seats + " rooms on hotel " + id + " start and end dates: " + startdate + " - " + enddate);
 
 		for (Hotel x : hotels) {
 			if (x.getAvailablerooms() > seats && x.id == id) {
@@ -163,6 +254,7 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 		}
 		return false;
 	}
+
 	@Override
 	public boolean registerFlightIntl(String to, String from, int maxprice, String client) throws RemoteException {
 		System.out.println("Registering flight interest...");
@@ -179,7 +271,7 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 	}
 
 	@Override
-	public boolean registerRoomsIntl(String where,int seats, int maxprice, String client) throws RemoteException {
+	public boolean registerRoomsIntl(String where, int seats, int maxprice, String client) throws RemoteException {
 		System.out.println("Registering room interest...");
 
 		Registry refSN = LocateRegistry.getRegistry(5005);
@@ -197,38 +289,50 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 	public boolean removeFlightIntl(String to, String from, int maxprice, String client) throws RemoteException {
 		System.out.println("Removing flight interest...");
 		FlightInt aux = null;
-		for(FlightInt fi: fint) {
-			if(fi.to.equals(to) && fi.from.equals(from) && fi.maxprice == maxprice ) { 
+		for (FlightInt fi : fint) {
+			if (fi.to.equals(to) && fi.from.equals(from) && fi.maxprice == maxprice) {
 				aux = fi;
 			}
 		}
-		if(aux==null)
+		if (aux == null)
 			return false;
-		
-		if(aux != null)
-		fint.remove(aux);
-		
+
+		if (aux != null)
+			fint.remove(aux);
+
 		System.out.println("Removed Fintl");
 		return true;
 	}
-	public boolean sellPackage(int flightid, int hotelid, int seats, long startdate, long enddate) throws RemoteException{
+
+	@Override
+	public boolean removePackageIntl(String to, String from, String where, int maxprice, int seats)throws RemoteException   {
+		for(PackageInt x : packagesInt) {
+			if(x.to.equals(to) && x.from.equals(from) && x.where.equals(where) && maxprice == x.maxprice && x.seats == seats )
+					packagesInt.remove(x);
+		}
+		
+		return true;
+	}
+
+	public boolean sellPackage(int flightid, int hotelid, int seats, long startdate, long enddate)
+			throws RemoteException {
 		sellFlight(flightid, seats);
 		sellRooms(hotelid, seats, startdate, enddate);
 		return true;
-		
+
 	}
 
 	@Override
 	public boolean removeRoomsIntl(String where, int seats, int maxprice, String client) throws RemoteException {
 		System.out.println("Removing room interest...");
 
-		for(RoomsInt ri: rint) {
-			if(ri.where.equals(where) && ri.seats == seats && ri.maxprice == maxprice) { 
+		for (RoomsInt ri : rint) {
+			if (ri.where.equals(where) && ri.seats == seats && ri.maxprice == maxprice) {
 				System.out.println("Removed Rintl");
 				rint.remove(ri);
 			}
 		}
-		
+
 		return true;
 	};
 

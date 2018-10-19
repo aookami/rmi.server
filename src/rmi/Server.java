@@ -30,4 +30,11 @@ public interface Server extends  Remote{
 	public boolean sellPackage(int flightid, int hotelid, int seats, long startdate, long enddate) throws RemoteException;
 	public boolean registerRoomsIntl(String where, int seats, int maxprice, String client) throws RemoteException;
 	public boolean removeRoomsIntl(String where, int seats, int maxprice, String client) throws RemoteException;
+
+	void addPackage(int idp, int id, int seats, String to, String from, int price, long fftimestamp, int idh,
+			String name, String where, int roomcap) throws RemoteException;
+	void addPackage(int idp, int idf, int idh, int seats, int price) throws RemoteException;
+	void addPackageInt(String to, String from, String where, int maxprice, int seats, String client) throws RemoteException;
+	boolean removePackageIntl(String to, String from, String where, int maxprice, int seats) throws RemoteException;
+
 }

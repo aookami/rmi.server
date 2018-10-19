@@ -31,7 +31,7 @@ public class ServerMain {
 				System.out.println("Waiting for input");
 				if (input.contains("help")) {
 					System.out.println("addflight-id-seats-to-from-fftimestamp-price");
-					System.out.println("addflight-id-name-where-rooms-roomcap-price");
+					System.out.println("addhotel-id-name-where-rooms-roomcap-price");
 				}
 				if (input.contains("addflight")) {
 					server.addFlight((int) Integer.valueOf(input.split("-")[1]), Integer.valueOf(input.split("-")[2]),
@@ -41,7 +41,7 @@ public class ServerMain {
 				if (input.contains("addhotel")) {
 					server.addHotel((int) Integer.valueOf(input.split("-")[1]), input.split("-")[2],
 							input.split("-")[3], (int) Integer.valueOf(input.split("-")[4]),
-							(int) Integer.valueOf(input.split("-")[6]), (int) Integer.valueOf(input.split("-")[6]));
+							(int) Integer.valueOf(input.split("-")[5]), (int) Integer.valueOf(input.split("-")[6]));
 				}
 			}
 		} catch (RemoteException e) {
