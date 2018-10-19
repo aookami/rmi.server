@@ -7,6 +7,7 @@ import java.rmi.registry.Registry;
 import java.util.Scanner;
 
 public class ServerMain {
+	int thegreatidindex = 0;
 
 	public static void main(String[] args) {
 		Server server = null;
@@ -32,6 +33,9 @@ public class ServerMain {
 				if (input.contains("help")) {
 					System.out.println("addflight-id-seats-to-from-fftimestamp-price");
 					System.out.println("addhotel-id-name-where-rooms-roomcap-price");
+					System.out.println("lookupallhotels");
+					System.out.println("lookupallflights");
+					System.out.println("lookupallpackages");
 				}
 				if (input.contains("addflight")) {
 					server.addFlight((int) Integer.valueOf(input.split("-")[1]), Integer.valueOf(input.split("-")[2]),
@@ -43,11 +47,43 @@ public class ServerMain {
 							input.split("-")[3], (int) Integer.valueOf(input.split("-")[4]),
 							(int) Integer.valueOf(input.split("-")[5]), (int) Integer.valueOf(input.split("-")[6]));
 				}
+
+				if (input.contains("addpackage")) {
+					server.addPackage(Integer.valueOf(input.split("-")[1]), Integer.valueOf(input.split("-")[2]),
+							Integer.valueOf(input.split("-")[3]), Integer.valueOf(input.split("-")[4]),
+							Integer.valueOf(input.split("-")[5]));
+				}
+
+				if (input.contains("lookupallflights")) {
+					System.out.println("Looking up flights...");
+
+					for (String s : server.getFlights()) {
+						System.out.println(s);
+					}
+				}
+				if (input.contains("lookupallpackages")) {
+					System.out.println("Looking up packages...");
+
+					for (String s : server.getPackages()) {
+						System.out.println(s);
+					}
+				}
+				if (input.contains("lookupallhotels")) {
+					System.out.println("Looking up hotels...");
+
+					for (String s : server.getHotels()) {
+						System.out.println(s);
+					}
+				}
 			}
 		} catch (RemoteException e) {
 			System.out.println("Remote exception at creating registry:" + e.getMessage());
 		}
 
+	}
+	public int getId() {
+		thegreatidindex = thegreatidindex +1;
+		return thegreatidindex;
 	}
 
 }

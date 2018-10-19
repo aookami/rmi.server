@@ -39,8 +39,21 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 		List<String> newL = new ArrayList<>();
 
 		for (Flight x : flights) {
-			newL.add(x.id + " - " + x.getTo() + " - " + x.getFrom() + " - " + x.getFftimestamp() + " - " + x.getPrice()
-					+ " - " + x.getSeats());
+			newL.add(x.id + " -To: " + x.getTo() + " -From: " + x.getFrom() + " -FlightTime: " + x.getFftimestamp() + " -Price: " + x.getPrice()
+					+ " -SeatsRemaining: " + x.getSeats());
+		}
+		return newL;
+	}
+
+	@Override
+	public List<String> getPackages() throws RemoteException {
+		System.out.println("Answering packages data request");
+		List<String> newL = new ArrayList<>();
+
+		for (Package x : packages) {
+			newL.add(x.packageId + " -To: " + x.flight.to + " -From: " + x.flight.from + " -FlightTime: " + x.flight.fftimestamp + " -Where: "
+					+ x.hotel.where + " -Name: " + x.hotel.name + " -RoomCapacity: " + x.hotel.roomcapacity + " -AvailableRooms "
+					+ x.hotel.getAvailablerooms() + " -Price " + x.price + " -Seats " + x.seats);
 		}
 		return newL;
 	}
@@ -55,8 +68,8 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 			if (x.twoway == true)
 				if (x.getTo().equals(to) && x.getFrom().equals(from) && x.getFftimestamp() == fftimestamp
 						&& x.seats > seats)
-					newL.add(x.id + " - " + x.getTo() + " - " + x.getFrom() + " - " + x.getFftimestamp() + " - "
-							+ x.getPrice() + " - " + x.getSeats());
+					newL.add(x.id + " -To: " + x.getTo() + " -From: " + x.getFrom() + " -FlightTime: " + x.getFftimestamp() + " -Price: "
+							+ x.getPrice() + " -Seats: " + x.getSeats());
 		}
 		return newL;
 	}
@@ -139,7 +152,6 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 		packages.add(pack);
 		verifyPackageInts();
 
-
 	}
 
 	@Override
@@ -182,15 +194,13 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 			Boolean flightMatches = false;
 			Boolean hotelMatches = false;
 			for (Flight f : flights) {
-				if (x.to.equals(f.to) && x.from.equals(f.to)) {
+				if (x.to.equals(f.to) && x.from.equals(f.from)) {
 					flightMatches = true;
-					System.out.println("MATCHED FLIGHT");
 				}
 			}
 			for (Hotel z : hotels) {
 				if (x.where.equals(z.where) && x.seats <= z.getAvailablerooms()) {
 					hotelMatches = true;
-					System.out.println("MATCHED HOTEL");
 				}
 
 			}
@@ -200,16 +210,7 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 		}
 	}
 
-	public List<String> getPackages() {
-		List<String> pk = new ArrayList<>();
-		for (Package x : packages) {
-			pk.add("Package-" + x.flight.id + "-" + x.flight.seats + "-" + x.flight.to + "-" + x.flight.from + "-"
-					+ x.flight.fftimestamp + "-" + x.price + "-" + x.hotel.name + "-" + x.hotel.where + "-"
-					+ x.hotel.roomcapacity);
 
-		}
-		return pk;
-	}
 
 	public void removeFlight(Flight flight) throws RemoteException {
 		System.out.println("Removing flight" + flight.id + "...");
@@ -218,7 +219,7 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 	}
 
 	@Override
-	public boolean sellFlight(int id, int seats) throws RemoteException {
+	public synchronized boolean sellFlight(int id, int seats) throws RemoteException {
 		System.out.println("Selling " + seats + " seats on flight " + id + "...");
 
 		for (Flight x : flights) {
@@ -235,7 +236,7 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 	}
 
 	@Override
-	public boolean sellRooms(int id, int seats, long startdate, long enddate) throws RemoteException {
+	public synchronized boolean sellRooms(int id, int seats, long startdate, long enddate) throws RemoteException {
 		System.out.println(
 				"Selling " + seats + " rooms on hotel " + id + " start and end dates: " + startdate + " - " + enddate);
 
@@ -305,12 +306,14 @@ public class ServerImpl extends UnicastRemoteObject implements Server {
 	}
 
 	@Override
-	public boolean removePackageIntl(String to, String from, String where, int maxprice, int seats)throws RemoteException   {
-		for(PackageInt x : packagesInt) {
-			if(x.to.equals(to) && x.from.equals(from) && x.where.equals(where) && maxprice == x.maxprice && x.seats == seats )
-					packagesInt.remove(x);
+	public boolean removePackageIntl(String to, String from, String where, int maxprice, int seats)
+			throws RemoteException {
+		for (PackageInt x : packagesInt) {
+			if (x.to.equals(to) && x.from.equals(from) && x.where.equals(where) && maxprice == x.maxprice
+					&& x.seats == seats)
+				packagesInt.remove(x);
 		}
-		
+
 		return true;
 	}
 
